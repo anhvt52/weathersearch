@@ -26,7 +26,7 @@ class MainVMTest {
     // Executes each task synchronously using Architecture Components.
     @get:Rule
     var instantExecutorRule = InstantTaskExecutorRule()
-    lateinit var mainVM: MainVM
+    private lateinit var mainVM: MainVM
 
     @Mock
     lateinit var weatherRepository: WeatherRepository
