@@ -9,7 +9,7 @@ An Android demo app for using MVVM-State(MVI) and Clean Architect
 * Hilt for Dependency Injection
 * Mockito for Unit testing
 * Room DB for local data source (TODO)
-* Retrofit for requesting data from network
+* Retrofit for requesting data from network (TODO)
 * Jetpack
 
 ## Architecture Overview
