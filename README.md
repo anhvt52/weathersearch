@@ -1,15 +1,15 @@
 # Weather Search
 
 ## :scroll: Description
-An Android demo app for using MVVM-State(MVI) and Clean Architect
+An Android demo app for using MVVM-State(MVI) and Clean Architecture
 
-## Libraries and Framework use
+## Libraries and Frameworks used
 * Kotlin Programming Language
 * Kotlin Coroutines and Flow
 * Hilt for Dependency Injection
 * Mockito for Unit testing
 * Room DB for local data source (TODO)
-* Retrofit for requesting data from network
+* Retrofit for requesting data from network (TODO)
 * Jetpack
 
 ## Architecture Overview
