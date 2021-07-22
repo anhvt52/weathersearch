@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.anhvt.weathersearch.domain.repository.WeatherRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -15,66 +14,45 @@ class MainVM @Inject constructor(
     private val weatherRepository: WeatherRepository
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow<MainContract.State>(MainContract.State.Idle)
-    val uiState
-        get() = _uiState.asStateFlow()
+    @Inject
+    lateinit var reducer: SearchReducer
 
-    private val _uiEffect = MutableSharedFlow<MainContract.Effect?>()
-    val uiEffect
-        get() = _uiEffect.asSharedFlow()
+    private val _state = MutableStateFlow(SearchState())
+    val state = _state.asStateFlow()
 
-    private val _action = MutableSharedFlow<MainContract.Action>()
-    private val uiAction = _action.asSharedFlow()
+    private val currentState
+        get() = _state.value
 
-    init {
-        listenAction()
-    }
+    private val _uiEffect = MutableSharedFlow<SearchEffect?>()
+    val uiEffect = _uiEffect.asSharedFlow()
 
-    @OptIn(FlowPreview::class)
-    private fun listenAction() {
+    fun search(query: String) {
         viewModelScope.launch {
-            uiAction.sample(1000) // prevent fast-click
-                .collect {
-                    handleAction(it)
-                }
-        }
-    }
-
-    private suspend fun handleAction(action: MainContract.Action) {
-        when (action) {
-            is MainContract.Action.SubmitClicked -> {
-                search(action.query.trim())
+            if (query.length < 3) {
+                _uiEffect.emit(
+                    SearchEffect.NotSufficientLength("Length should be bigger or equal 3")
+                )
+            } else {
+                dispatch(SearchAction.StartSearching)
+                weatherRepository
+                    .searchByCityName(query)
+                    .flowOn(Dispatchers.IO)
+                    .map { data ->
+                        data.map { weatherDetails -> weatherDetails.mapToUiModel() }
+                    }
+                    .catch { error ->
+                        dispatch(SearchAction.Error(error.message!!))
+                    }
+                    .collect {
+                        dispatch(SearchAction.Loaded(it))
+                    }
             }
         }
     }
 
-    private suspend fun search(query: String) {
-        if (query.length < 3) {
-            _uiEffect.emit(
-                MainContract.Effect.NotSufficientLength("Length should be bigger or equal 3")
-            )
-        } else {
-            _uiState.value = MainContract.State.Loading
-            weatherRepository
-                .searchByCityName(query)
-                .flowOn(Dispatchers.IO)
-                .map { data ->
-                    data.map { weatherDetails -> weatherDetails.mapToUiModel() }
-                }
-                .catch { error ->
-                    _uiState.value = MainContract.State.Error(errorMessage = error.message ?: "")
-                }
-                .collect {
-                    _uiState.value =
-                        MainContract.State.Success(it)
-                }
-        }
-    }
-
-    fun setAction(action: MainContract.Action) {
-        viewModelScope.launch {
-            _action.emit(action)
-        }
+    private fun dispatch(searchAction: SearchAction) {
+        val newState = reducer.reduce(currentState, searchAction)
+        _state.value = newState
     }
 
     companion object {
