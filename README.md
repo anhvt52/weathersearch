@@ -2,6 +2,7 @@
 
 ## :scroll: Description
 An Android demo app for using MVVM-State(MVI) and Clean Architecture
+My presentation slide here: https://docs.google.com/presentation/d/1nex76ksuos7gglFtqPzoijb_AHp6jwqbBF2NPlqln6Q/edit#slide=id.g251e213838_1_2
 
 ## Libraries and Frameworks used
 * Kotlin Programming Language

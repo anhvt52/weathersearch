@@ -52,37 +52,26 @@ class MainActivity : AppCompatActivity() {
 
     private fun observerUiStateChange() {
         lifecycleScope.launchWhenStarted {
-            mainVM.uiState.collect { newState ->
-                when (newState) {
-                    is MainContract.State.Idle -> {
-                        toggleLoading(false)
-                        rvDetails.visibility = View.GONE
-                        tvError.visibility = View.GONE
-                    }
-                    is MainContract.State.Loading -> {
-                        toggleLoading(true)
-                    }
-                    is MainContract.State.Success -> {
-                        toggleLoading(false)
-                        rvDetails.apply {
-                            visibility = View.VISIBLE
-                            mainAdapter.submitList(newState.weatherList)
-                        }
-                        tvError.visibility = View.GONE
-                    }
-                    is MainContract.State.Error -> {
-                        toggleLoading(false)
-                        rvDetails.visibility = View.GONE
-                        tvError.apply {
-                            visibility = View.VISIBLE
-                            text = newState.errorMessage
-                        }
-                    }
-                    else -> {
-                        // show warning about unhandled state
-                    }
-                }
+            mainVM.state.collect { newState ->
+                handleStateChanged(newState)
             }
+        }
+    }
+
+    private fun handleStateChanged(newState: SearchState) {
+        toggleLoading(newState.isLoading)
+        if (newState.errorMessage != null) {
+            rvDetails.visibility = View.GONE
+            tvError.apply {
+                visibility = View.VISIBLE
+                text = newState.errorMessage
+            }
+        } else {
+            rvDetails.apply {
+                visibility = View.VISIBLE
+                mainAdapter.submitList(newState.weatherList)
+            }
+            tvError.visibility = View.GONE
         }
     }
 
@@ -90,7 +79,7 @@ class MainActivity : AppCompatActivity() {
         lifecycleScope.launchWhenStarted {
             mainVM.uiEffect.collect { effect ->
                 when (effect) {
-                    is MainContract.Effect.NotSufficientLength -> {
+                    is SearchEffect.NotSufficientLength -> {
                         etSearchView.error = effect.message
                     }
                 }
@@ -111,6 +100,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun onSubmitClicked() {
-        mainVM.setAction(MainContract.Action.SubmitClicked(etSearchView.text.toString()))
+        mainVM.search(etSearchView.text.toString())
     }
 }

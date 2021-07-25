@@ -51,13 +51,13 @@ class MainVMTest {
     @Test
     fun `submit insufficient length`(): Unit = runBlocking {
         launch(Dispatchers.Main) {
-            var result: MainContract.Effect? = null
+            var result: SearchEffect? = null
             val job = launch {
                 result = mainVM.uiEffect.first()
             }
-            mainVM.setAction(MainContract.Action.SubmitClicked("12"))
+            mainVM.setAction(SearchAction.SubmitClicked("12"))
             job.join()
-            assert(result is MainContract.Effect.NotSufficientLength)
+            assert(result is SearchEffect.NotSufficientLength)
         }
     }
 
@@ -66,11 +66,11 @@ class MainVMTest {
         launch(Dispatchers.Main) {
             Mockito.`when`(weatherRepository.searchByCityName("saigon"))
                 .thenReturn(flowOf(mockRemoteData))
-            mainVM.setAction(MainContract.Action.SubmitClicked("saigon"))
+            mainVM.setAction(SearchAction.SubmitClicked("saigon"))
             val states = mainVM.uiState.take(3).toList()
-            assert(states[0] is MainContract.State.Idle)
-            assert(states[1] is MainContract.State.Loading)
-            assert(states[2] is MainContract.State.Success)
+            assert(states[0] is SearchState.Idle)
+            assert(states[1] is SearchState.Loading)
+            assert(states[2] is SearchState.Success)
         }
     }
 
@@ -79,11 +79,11 @@ class MainVMTest {
         Mockito.`when`(weatherRepository.searchByCityName("saigon"))
             .thenReturn(flow { throw Exception() })
         launch(Dispatchers.Main) {
-            mainVM.setAction(MainContract.Action.SubmitClicked("saigon"))
+            mainVM.setAction(SearchAction.SubmitClicked("saigon"))
             val states = mainVM.uiState.take(3).toList()
-            assert(states[0] is MainContract.State.Idle)
-            assert(states[1] is MainContract.State.Loading)
-            assert(states[2] is MainContract.State.Error)
+            assert(states[0] is SearchState.Idle)
+            assert(states[1] is SearchState.Loading)
+            assert(states[2] is SearchState.Error)
         }
     }
 }
